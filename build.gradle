@@ -1,0 +1,113 @@
+group 'io.coinshell'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'idea'
+
+sourceCompatibility = 1.8
+
+buildscript {
+    ext {
+        springBootVersion = '1.5.2.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath("org.junit.platform:junit-platform-gradle-plugin:1.0.0-M3")
+        classpath("org.springframework:springloaded:1.2.6.RELEASE")
+
+    }
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven {
+        url "https://jcenter.bintray.com"
+    }
+    maven {
+        url  "http://dl.bintray.com/snimavat/maven"
+    }
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+
+
+dependencies {
+    // JUnit
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+    // Spring
+    compile("org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}")
+    compile("org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}")
+    compile("org.springframework.boot:spring-boot-starter-jdbc:${springBootVersion}")
+    compile("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
+    compile("org.springframework.boot:spring-boot-starter-security:${springBootVersion}")
+    runtime("org.springframework.boot:spring-boot-devtools:${springBootVersion}")
+
+    // Dependency Injection
+    //compile("javax.inject:javax.inject:1")
+    //compile("com.google.guava:guava:19.0")
+
+    // JPA
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: '1.5.2.RELEASE'
+
+    // H2
+    compile group: 'com.h2database', name: 'h2', version: '1.4.196'
+
+
+    // Lombok (keep compile only)
+    compileOnly("org.projectlombok:lombok:1.16.16")
+
+    // Swagger
+    compile("io.springfox:springfox-swagger2:2.7.0")
+    compile("io.springfox:springfox-swagger-ui:2.7.0")
+
+    // JWT
+    compile("io.jsonwebtoken:jjwt:0.7.0")
+
+    // Misc Dependencies
+    compile group: 'joda-time', name: 'joda-time', version: '2.8.1'
+    compile group: 'com.mashape.unirest', name: 'unirest-java', version: '1.4.9'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.6'
+    compile group: 'commons-io', name: 'commons-io', version: '2.5'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.6'
+    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.3'
+    compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'
+    compile group: 'com.jayway.jsonpath', name: 'json-path', version: '2.4.0'
+
+    // Dependencies for Testing
+    testCompile("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
+    testCompileOnly("org.projectlombok:lombok")
+
+}
+
+test {
+
+    // Note: Integration tests are not yet using the test DB
+    // Whenever that happens, make sure this environment var properly signals load of application-test.properties
+    environment SPRING_PROFILES_ACTIVE: environment.SPRING_PROFILES_ACTIVE ?: "test"
+
+    testLogging {
+        events "passed", "skipped", "failed"
+        showStandardStreams = true
+    }
+}
+
+idea {
+    module {
+        inheritOutputDirs = false
+        outputDir = file("$buildDir/classes/main/")
+    }
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'io.coinshell.cli.CoinShell'
+    }
+}
