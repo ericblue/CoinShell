@@ -60,7 +60,6 @@ dependencies {
     // H2
     compile group: 'com.h2database', name: 'h2', version: '1.4.196'
 
-
     // Lombok (keep compile only)
     compileOnly("org.projectlombok:lombok:1.16.16")
 
@@ -70,6 +69,10 @@ dependencies {
 
     // JWT
     compile("io.jsonwebtoken:jjwt:0.7.0")
+
+    // https://mvnrepository.com/artifact/commons-cli/commons-cli
+    compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
+
 
     // Misc Dependencies
     compile group: 'joda-time', name: 'joda-time', version: '2.8.1'

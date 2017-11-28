@@ -27,16 +27,7 @@ public class CoinShellServer {
     private Environment env;
 
 
-    public static void main(String[] args) {
 
-
-        System.out.println("Hello world!");
-
-
-        SpringApplication.run(CoinShellServer.class, args);
-
-
-    }
 
     @EventListener(ContextRefreshedEvent.class)
     public void startupInfo() {
