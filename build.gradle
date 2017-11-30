@@ -114,3 +114,7 @@ jar {
         attributes 'Main-Class': 'io.coinshell.cli.CoinShell'
     }
 }
+
+springBoot {
+    mainClass = 'io.coinshell.cli.CoinShell'
+}
