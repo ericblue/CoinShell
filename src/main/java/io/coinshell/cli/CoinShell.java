@@ -4,36 +4,29 @@ package io.coinshell.cli;
 import io.coinshell.CoinShellServer;
 import io.coinshell.domain.Price;
 import io.coinshell.integrations.CryptoCompareClient;
+import io.coinshell.license.LicenseNotice;
 import io.coinshell.service.CoinService;
-import io.coinshell.util.SpringUtils;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.servlet.ServletComponentScan;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.HashSet;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
-import java.util.Set;
-import java.util.logging.Level;
+import java.util.Properties;
 
-@SpringBootApplication
-public class CoinShell {
+// TODO Get Spring autoconfig working with both CLI and Web concurrently
+// See https://kanbanflow.com/t/ce5d707b257d11e0e1ba0962aee88d57/cs2
+// For now, use rest clients directly rather than Service layers
+
+//@SpringBootApplication
+//@EnableAutoConfiguration
+//@ComponentScan("io.coinshell")
+public class CoinShell implements CommandLineRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(CoinShell.class);
 
@@ -41,16 +34,50 @@ public class CoinShell {
 
     private static CryptoCompareClient cryptoCompareClient = new CryptoCompareClient();
 
+    //private CoinService coinService;
+
+//    @Autowired
+//    public CoinShell(CoinService coinService) {
+//
+//        this.coinService = coinService;
+//    }
+
     public static void raiseError(String message) {
 
         System.out.println("Error: " + message);
-        logger.error(message);
         System.exit(-1);
 
+    }
+
+    private static String getVersion() throws IOException {
+
+        Properties prop = new Properties();
+
+        String resourceName = "application.properties";
+
+        prop.load(CoinShell.class.getResourceAsStream("/application.properties"));
+
+        String version = prop.getProperty("version");
+        if (version != null) {
+            return version;
+        } else {
+            return "Undefined";
+        }
 
     }
 
     public static void main(String[] args) {
+
+        System.out.println("Welcome! CoinShell Initializing...");
+
+        SpringApplication app = new SpringApplication(CoinShell.class);
+        app.setWebEnvironment(false);
+        app.run(args);
+
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
 
 
         Option helpOption = Option.builder("h")
@@ -72,10 +99,17 @@ public class CoinShell {
                 .desc("Find current price of a coin")
                 .build();
 
+        Option versionOption = Option.builder("v")
+                .longOpt("version")
+                .required(false)
+                .desc("Get version number")
+                .build();
+
 
         options.addOption(helpOption);
         options.addOption(webServerOption);
         options.addOption(priceOption);
+        options.addOption(versionOption);
 
 
         try {
@@ -83,34 +117,62 @@ public class CoinShell {
             CommandLineParser parser = new DefaultParser();
             CommandLine cmdLine = parser.parse(options, args);
 
+            Boolean validCommand = false;
 
-            if (cmdLine.hasOption("help")) {
-                printUsage();
-            }
-            else if (cmdLine.hasOption("web")) {
-                System.out.println("Running...");
+
+            if (cmdLine.hasOption("web")) {
+                validCommand = true;
+                System.out.println("Launching embedded CoinShell web server...");
                 SpringApplication.run(CoinShellServer.class);
-            }
-            else if (cmdLine.hasOption("price")) {
+            } else {
 
-                List<String> argList = cmdLine.getArgList();
+                System.out.println("Launching CLI...");
 
-                if (argList.size() < 2) {
-                    raiseError("usage - coinshell -p <fromCurrency> <toCurrency>");
+                if (cmdLine.hasOption("help")) {
+                    validCommand = true;
+                    printUsage();
+                    System.exit(0);
                 }
 
-                String fromCurrency = argList.get(0);
-                String toCurrency = argList.get(1);
+                if (cmdLine.hasOption("version")) {
+                    validCommand = true;
 
-                System.out.println("arg list = " + argList);
+                    System.out.println("CoinShell version " + getVersion() + "\n");
+                    System.out.println(LicenseNotice.getLicense());
+                    System.exit(0);
+                }
 
-                Price price = cryptoCompareClient.getPrice(fromCurrency, toCurrency);
-                System.out.println(fromCurrency + " price = " + price.getPrice() + " "  + toCurrency);
+                if (cmdLine.hasOption("price")) {
+
+                    validCommand = true;
+
+                    System.out.println("Making request...");
+
+                    List<String> argList = cmdLine.getArgList();
+
+                    if (argList.size() < 2) {
+                        raiseError("usage - coinshell -p <fromCurrency> <toCurrency>");
+                    }
+
+                    String fromCurrency = argList.get(0).toUpperCase();
+                    String toCurrency = argList.get(1).toUpperCase();
+
+                    logger.debug("arg list = " + argList);
+
+                    Price price = cryptoCompareClient.getPrice(fromCurrency, toCurrency);
+                    //Price price = coinService.getPrice(fromCurrency, toCurrency);
+                    System.out.println(fromCurrency + " price = " + price.getPrice() + " " + toCurrency);
+                    System.exit(0);
+
+                }
+
+                if (!validCommand) {
+
+                    printUsage();
+                }
 
             }
-            else {
-                printUsage();
-            }
+
 
         } catch (ParseException e) {
             System.out.println(e.getMessage());

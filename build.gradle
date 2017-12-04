@@ -115,6 +115,38 @@ jar {
     }
 }
 
+task dist(type:Copy,dependsOn:[jar]) {
+    copy {
+        from "${buildDir}/libs/coinshell-${version}.jar"
+        into "dist"
+        rename { fileName ->
+            "coinshell-latest.jar"
+        }
+    }
+
+}
+
+def updateVersion() {
+    def configFile = new File('src/main/resources/application.properties')
+    println "updating version to '${version}' in ${configFile}"
+    String configContent = configFile.getText('UTF-8')
+    configContent = configContent.replaceAll(/version=.*/, "version=${version}")
+    configFile.write(configContent, 'UTF-8')
+}
+
+allprojects {
+    updateVersion()
+}
+
+// Make CoinShell Main class when using in CLI mode
+
 springBoot {
     mainClass = 'io.coinshell.cli.CoinShell'
 }
+
+// Otherwise, launch Web mode when using ./gradleW bootRun
+
+bootRun {
+    main = 'io.coinshell.CoinShellServer'
+}
+

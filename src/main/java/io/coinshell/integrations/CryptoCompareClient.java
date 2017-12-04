@@ -30,7 +30,7 @@ public class CryptoCompareClient {
 
         RestClientOptions restClientOptions = new RestClientOptions();
 
-        restClientOptions.setUseProxy(true);
+        restClientOptions.setUseProxy(false);
 
         restClient = new RestClient(restClientOptions);
 

@@ -6,11 +6,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.boot.web.servlet.ServletComponentScan;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
@@ -27,7 +30,11 @@ public class CoinShellServer {
     private Environment env;
 
 
+    public static void main(String[] args) {
 
+        SpringApplication.run(CoinShellServer.class, args);
+
+    }
 
     @EventListener(ContextRefreshedEvent.class)
     public void startupInfo() {
@@ -37,13 +44,23 @@ public class CoinShellServer {
 
     }
 
+    @Component
+    public class MyListener implements ApplicationListener<EmbeddedServletContainerInitializedEvent> {
+
+        @Override
+        public void onApplicationEvent(final EmbeddedServletContainerInitializedEvent event) {
+            int port = event.getEmbeddedServletContainer().getPort();
+
+            System.out.println("Web server ready.  Listening on http://localhost:" + port + ". Hit <CTRL-C> to stop.");
+        }
+    }
+
 
     // TODO Add db schema and data setup - See https://github.com/mkyong/spring-embedded-database
     // Or, use FlyAway
 
     @Bean
     public WebMvcConfigurer corsConfigurer() {
-
 
 
         return new WebMvcConfigurerAdapter() {
