@@ -50,9 +50,8 @@ dependencies {
     compile("org.springframework.boot:spring-boot-starter-security:${springBootVersion}")
     runtime("org.springframework.boot:spring-boot-devtools:${springBootVersion}")
 
-    // Dependency Injection
-    //compile("javax.inject:javax.inject:1")
-    //compile("com.google.guava:guava:19.0")
+    // Tomcat
+    compile("org.apache.tomcat.embed:tomcat-embed-jasper")
 
     // JPA
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: '1.5.2.RELEASE'

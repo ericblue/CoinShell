@@ -1,6 +1,5 @@
 package io.coinshell.config;
 
-import io.coinshell.authentication.JwtAuthenticationFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,9 +10,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
@@ -31,14 +29,18 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
         http.csrf().disable()
                 .authorizeRequests()
-                .antMatchers( "/hello"
+                .antMatchers("/",
+                           "/price",
+                           "/version",
+                           "/error"
                         ).permitAll()
-                .anyRequest().authenticated()
-                .and()
-                .addFilterBefore(
-                        new JwtAuthenticationFilter(),
-                        UsernamePasswordAuthenticationFilter.class
-                );
+                .anyRequest().authenticated();
+        // TODO Add JWT authentication
+        //        .and()
+        //        .addFilterBefore(
+        //                new JwtAuthenticationFilter(),
+        //                UsernamePasswordAuthenticationFilter.class
+        //        );
 
 
     }
@@ -55,25 +57,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         logger.debug("Finalizing CORS setup and adding to Spring Security configuration");
 
         final CorsConfiguration configuration = new CorsConfiguration();
-        // Temporarily set Access-Control-Allow-Origin to *
-        // TODO Add an enumerated list of allowed hosts by explicit list, or wildcard sub-domain
-        configuration.setAllowedOrigins(Arrays.asList("*"));
+
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:8080"));
         configuration.setAllowedMethods(Arrays.asList("HEAD","GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        // setAllowCredentials(true) is important, otherwise:
-        // The value of the 'Access-Control-Allow-Origin' header in the response must not be the wildcard '*' when the request's credentials mode is 'include'.
         configuration.setAllowCredentials(true);
-        // setAllowedHeaders is important! Without it, OPTIONS preflight request will fail with 403 Invalid CORS request
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
+
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
 
-    @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-                .inMemoryAuthentication()
-                .withUser("user").password("password").roles("USER");
+        return source;
     }
 
 }
