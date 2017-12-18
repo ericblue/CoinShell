@@ -6,7 +6,9 @@ import io.coinshell.domain.Price;
 import io.coinshell.integrations.CryptoCompareClient;
 import io.coinshell.license.LicenseNotice;
 import io.coinshell.service.CoinService;
+import io.coinshell.util.DateTimeUtils;
 import org.apache.commons.cli.*;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,6 +101,12 @@ public class CoinShell implements CommandLineRunner {
                 .desc("Find current price of a coin")
                 .build();
 
+        Option priceHistoricalOption = Option.builder("ph")
+                .longOpt("price_historical")
+                .required(false)
+                .desc("Find historical price of a coin")
+                .build();
+
         Option versionOption = Option.builder("v")
                 .longOpt("version")
                 .required(false)
@@ -109,6 +117,7 @@ public class CoinShell implements CommandLineRunner {
         options.addOption(helpOption);
         options.addOption(webServerOption);
         options.addOption(priceOption);
+        options.addOption(priceHistoricalOption);
         options.addOption(versionOption);
 
 
@@ -161,6 +170,35 @@ public class CoinShell implements CommandLineRunner {
 
                     Price price = cryptoCompareClient.getPrice(fromCurrency, toCurrency);
                     //Price price = coinService.getPrice(fromCurrency, toCurrency);
+                    System.out.println(fromCurrency + " price = " + price.getPrice() + " " + toCurrency);
+                    System.exit(0);
+
+                }
+
+                if (cmdLine.hasOption("price_historical")) {
+
+                    validCommand = true;
+
+                    System.out.println("Making request...");
+
+                    List<String> argList = cmdLine.getArgList();
+
+                    if (argList.size() < 3) {
+                        raiseError("usage - coinshell -ph <time> <fromCurrency> <toCurrency>");
+                    }
+
+                    String dateTime = argList.get(0).toUpperCase();
+                    String fromCurrency = argList.get(1).toUpperCase();
+                    String toCurrency = argList.get(2).toUpperCase();
+
+                    logger.debug("arg list = " + argList);
+
+
+                    String format = DateTimeUtils.detectDateTimeFormat(dateTime);
+
+                    DateTime timestamp = DateTimeUtils.getDateTimeFromString(dateTime, format);
+
+                    Price price = cryptoCompareClient.getPriceHistorical(timestamp, fromCurrency, toCurrency);
                     System.out.println(fromCurrency + " price = " + price.getPrice() + " " + toCurrency);
                     System.exit(0);
 

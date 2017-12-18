@@ -30,7 +30,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/",
-                           "/price",
+                           "/price", "/price/**",
                            "/version",
                            "/error"
                         ).permitAll()
